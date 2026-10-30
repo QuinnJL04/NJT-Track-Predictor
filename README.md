@@ -32,6 +32,8 @@ npm run lint
 | ---------------------------------------- | -------------------------------------------------------------- |
 | `src/lib/types.ts`                       | The data contract: `Departure`, `TrackInfo`, `BoardSnapshot`   |
 | `src/lib/server/source.ts`               | Picks mock or NJT by `DATA_SOURCE`, shares one cached fetch    |
+| `src/lib/server/shared.ts`               | Cross-instance board cache, token lock, daily call budget      |
+| `src/lib/server/kv.ts`                   | Key-value store: Upstash Redis, or in-memory when unconfigured |
 | `src/lib/server/njt.ts`                  | RailData client: token reuse and refresh, `getTrainSchedule`   |
 | `src/lib/server/njt-normalize.ts`        | NJT response → `Departure[]`                                   |
 | `src/routes/api/board/+server.ts`        | JSON snapshot (CDN-cached 15 s)                                |
@@ -48,16 +50,40 @@ npm run lint
 
 ### Limits
 
-- **Tokens: 5 per account per day.** The server keeps its token for as long as NJT accepts
-  it and only calls `getToken` again on `Invalid token.`. Serverless cold starts would
-  each spend a token, so on Vercel set `NJT_TOKEN` to a token you already have
-  (`npm run njt:capture` prints when it issues one).
+- **Tokens: 5 per account per day.** The token lives in the shared store (below) and is
+  reused for as long as NJT accepts it. Only one instance at a time may call `getToken`;
+  the others wait and re-read. A failed `getToken` blocks retries for 30 s. `NJT_TOKEN`,
+  if set, seeds the store with a token you already have (`npm run njt:capture` prints
+  when it issues one).
 - **Requests: 100,000 per day across all NJT feeds** (data agreement; exceeding it needs
-  NJT's written consent and prompt notice to passcomm@njtransit.com). The server fetches
-  `getTrainSchedule` at most once per 20 s per instance, about 4,320 calls a day per warm
-  instance. `/api/board` is CDN-cached, so pollers don't add upstream calls. The caches
-  are per instance, though, so watch the count if Vercel scales out widely. (Some
-  RailData methods, such as `getStationSchedule`, have their own 5–10 calls a day limit.)
+  NJT's written consent and prompt notice to passcomm@njtransit.com). The latest board is
+  kept in the shared store with its `fetchedAt`. An instance calls `getTrainSchedule` only
+  when the stored board is over 20 s old and it wins a lock; the rest serve the stored
+  board. That's at most about 4,320 calls a day however far Vercel scales out.
+  `/api/board` is CDN-cached, so pollers don't add upstream calls either. If NJT fails,
+  the last good board is served and nobody retries for 30 s. (Some RailData methods, such
+  as `getStationSchedule`, have their own 5–10 calls a day limit.)
+- **Daily budget.** Every NJT request, `getToken` included, is counted per New York
+  calendar day in the store. At 80,000 the server logs a warning; past 95,000 it stops
+  calling NJT and serves the cached board (flagged "may not be real time") until midnight.
+
+#### Shared store (Upstash Redis)
+
+Without Redis env vars, each server instance keeps the token, board and count in memory.
+That's what `npm run dev` and the tests use, and it's fine on one long-lived server. On
+Vercel, set up Upstash so instances share them:
+
+1. Create a Redis database: Vercel dashboard → Storage → Upstash for Redis (Marketplace),
+   connected to this project, or at <https://console.upstash.com> directly. Pick a region
+   close to the Vercel functions (`iad1` by default).
+2. Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in the project's env vars.
+   The Vercel integration may name them `KV_REST_API_URL` and `KV_REST_API_TOKEN`
+   instead; either pair works. Don't use the read-only token.
+3. Redeploy. Keys are `njt:board`, `njt:token`, `njt:calls:YYYY-MM-DD` and their `:lock`s.
+
+Each instance remembers the board locally until it's 20 s old, so Redis sees a few
+commands per instance per 20 s: roughly 25,000–30,000 a day for one busy instance, plus
+about 5,000 per extra one. Check that against the Upstash plan's command limit.
 
 ### Data agreement obligations
 
