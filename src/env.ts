@@ -18,5 +18,13 @@ export const variables = defineEnvVars({
 	NJT_TOKEN: {
 		description: 'Optional pre-issued RailData token, so cold starts skip getToken (5/day limit)',
 		schema: optional
+	},
+	DATABASE_URL: {
+		description: 'Postgres (Neon) connection string for training data; logging is off when unset',
+		schema: optional
+	},
+	CRON_SECRET: {
+		description: 'Bearer token required by /api/cron/log (Vercel Cron sends it automatically)',
+		schema: optional
 	}
 });
