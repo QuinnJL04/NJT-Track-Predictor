@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { Departure } from '#lib/types.js';
 	import { leavesAt } from '#lib/format.js';
+	import { createBoard } from '#lib/data/board.js';
 	import DepartureRow from '#lib/components/DepartureRow.svelte';
 	import WindowPicker, { WINDOWS } from '#lib/components/WindowPicker.svelte';
 	import type { PageProps } from './$types';
@@ -10,11 +11,20 @@
 
 	const WINDOW_KEY = 'penn-track:window';
 
-	let windowMin = $state(60);
-	// Start from the server's clock so the first render hydrates cleanly.
+	// Seeded with the server-rendered snapshot, then kept live over SSE or polling.
+	// The server's clock is the starting `now` so the first render hydrates cleanly.
+	// svelte-ignore state_referenced_locally
+	const board = createBoard(data.snapshot);
 	// svelte-ignore state_referenced_locally
 	let now = $state(data.now);
-	const snapshot = $derived(data.snapshot);
+	let windowMin = $state(60);
+	const snapshot = $derived($board.snapshot);
+
+	let bannerDismissed = $state(false);
+	const offline = $derived($board.connection === 'offline');
+	$effect(() => {
+		if (!offline) bannerDismissed = false;
+	});
 
 	const visible = $derived(
 		(snapshot?.departures ?? []).filter(
@@ -24,13 +34,14 @@
 	const phrase = $derived(WINDOWS.find((w) => w.minutes === windowMin)?.phrase ?? 'this window');
 
 	// Pulse a track badge for ~10 s when it flips to posted while the board is open.
-	let lastKind = new Map<string, Departure['track']['kind']>();
+	// Plain object on purpose: this is bookkeeping, not something to render.
+	let lastKind: Record<string, Departure['track']['kind']> = {};
 	let fresh = $state<Record<string, true>>({});
 	$effect(() => {
-		const next = new Map<string, Departure['track']['kind']>();
+		const next: typeof lastKind = {};
 		for (const d of snapshot?.departures ?? []) {
-			next.set(d.id, d.track.kind);
-			const before = lastKind.get(d.id);
+			next[d.id] = d.track.kind;
+			const before = lastKind[d.id];
 			if (d.track.kind === 'posted' && before && before !== 'posted') {
 				fresh[d.id] = true;
 				setTimeout(() => delete fresh[d.id], 10_000);
@@ -70,6 +81,12 @@
 		<h1>NY Penn <span>NJ Transit</span></h1>
 		<WindowPicker bind:value={() => windowMin, pick} />
 	</div>
+	{#if offline && !bannerDismissed}
+		<div class="banner" role="status">
+			<span>Connection lost. Retrying…</span>
+			<button type="button" aria-label="Dismiss" onclick={() => (bannerDismissed = true)}>×</button>
+		</div>
+	{/if}
 </header>
 
 <main aria-busy={!snapshot}>
@@ -132,6 +149,30 @@
 
 	main {
 		padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+	}
+
+	.banner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		max-width: var(--col);
+		margin: 0 auto;
+		padding: 0 0.25rem 0 var(--gutter);
+		background: var(--delay-bg);
+		color: var(--delay-ink);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.banner button {
+		width: 2.75rem;
+		height: 2.75rem;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		font-size: 1.25rem;
+		cursor: pointer;
 	}
 
 	.board {
