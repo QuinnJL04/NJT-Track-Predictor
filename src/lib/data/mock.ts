@@ -52,6 +52,7 @@ const serviceDate = (t: number) =>
 export class MockBoard {
 	#rng: () => number;
 	#trains: MockTrain[] = [];
+	#now = 0;
 	#counters = LINES.map((l) => l.firstTrain);
 
 	constructor(now = Date.now(), seed = 7) {
@@ -77,6 +78,7 @@ export class MockBoard {
 
 	/** Advance the board to `now`: post tracks, drop departed trains, add new ones. */
 	tick(now = Date.now()) {
+		this.#now = now;
 		this.#trains = this.#trains.filter((t) => {
 			const leaves = Date.parse(t.departsAt) + (t.delayMin ?? 0) * MIN;
 			return leaves > now;
@@ -96,6 +98,7 @@ export class MockBoard {
 	snapshot(): BoardSnapshot {
 		return {
 			station: 'NY',
+			fetchedAt: new Date(this.#now).toISOString(),
 			departures: this.#trains.map(({ finalTrack, posted, ...d }) => ({
 				...d,
 				track:

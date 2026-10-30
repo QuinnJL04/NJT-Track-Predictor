@@ -26,6 +26,10 @@
 		if (!offline) bannerDismissed = false;
 	});
 
+	// NJT's terms: when data is more than a minute old, say it may not be real time.
+	const STALE_MS = 60_000;
+	const stale = $derived(!!snapshot && now - Date.parse(snapshot.fetchedAt) > STALE_MS);
+
 	const visible = $derived(
 		(snapshot?.departures ?? []).filter(
 			(d) => Date.parse(d.departsAt) <= now + windowMin * 60_000 && leavesAt(d) > now
@@ -58,7 +62,7 @@
 			// storage unavailable: keep the default
 		}
 		now = Date.now();
-		const clock = setInterval(() => (now = Date.now()), 15_000);
+		const clock = setInterval(() => (now = Date.now()), 5_000);
 		return () => clearInterval(clock);
 	});
 
@@ -87,6 +91,9 @@
 			<button type="button" aria-label="Dismiss" onclick={() => (bannerDismissed = true)}>×</button>
 		</div>
 	{/if}
+	{#if stale}
+		<p class="stale" role="status">Information may not be real time</p>
+	{/if}
 </header>
 
 <main aria-busy={!snapshot}>
@@ -106,6 +113,11 @@
 		</ul>
 	{/if}
 </main>
+
+<footer>
+	Not affiliated with NJ Transit. Departures come from NJ Transit data, served from this site's
+	server, and may be inaccurate, incomplete or delayed. "Likely" tracks are this site's estimates.
+</footer>
 
 <style>
 	header {
@@ -163,6 +175,25 @@
 		color: var(--delay-ink);
 		font-size: 0.875rem;
 		font-weight: 600;
+	}
+
+	.stale {
+		max-width: var(--col);
+		margin: 0 auto;
+		padding: 0.375rem var(--gutter);
+		border-top: 1px solid var(--rule);
+		color: var(--muted);
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+
+	footer {
+		max-width: var(--col);
+		margin: 0 auto;
+		padding: 0 var(--gutter) max(1.5rem, env(safe-area-inset-bottom));
+		color: var(--muted);
+		font-size: 0.75rem;
+		line-height: 1.45;
 	}
 
 	.banner button {

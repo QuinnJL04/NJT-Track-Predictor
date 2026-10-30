@@ -3,6 +3,8 @@ import { predictTrack } from '#lib/predict/stub.js';
 
 // Pure mapping from the RailData getTrainSchedule response to our contract.
 // Kept apart from njt.ts so it can be tested without env vars or network.
+// NJT's terms forbid modifying the data: text fields pass through as sent (only HTML
+// entities are decoded for display), and we add values only where NJT gives none.
 
 /** The subset of a getTrainSchedule ITEMS entry we read. Every value arrives as a string. */
 export type NjtItem = {
@@ -24,12 +26,13 @@ export type NjtStationInfo = {
 	ITEMS?: NjtItem[] | null;
 };
 
-const LINES: Record<string, { name: string; color: string }> = {
-	NE: { name: 'Northeast Corridor', color: '#EF3E33' },
-	NC: { name: 'North Jersey Coast', color: '#00A4E4' },
-	ME: { name: 'Morris & Essex', color: '#00A94F' },
-	MC: { name: 'Montclair-Boonton', color: '#C26ED1' },
-	GS: { name: 'Gladstone Branch', color: '#A1D883' }
+// Used only when NJT sends no usable BACKCOLOR.
+const FALLBACK_COLORS: Record<string, string> = {
+	NE: '#EF3E33',
+	NC: '#00A4E4',
+	ME: '#00A94F',
+	MC: '#C26ED1',
+	GS: '#A1D883'
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -70,19 +73,11 @@ export function parseNjtDate(s: string): number {
 const serviceDate = (t: number) =>
 	new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(t).replaceAll('-', '');
 
+/** Renders HTML entities (NJT sends e.g. "&#9992" for ✈). Content is otherwise untouched. */
 function decodeEntities(s: string): string {
 	return s
 		.replace(/&#(\d+);?/g, (_, n) => String.fromCodePoint(+n))
 		.replace(/&amp;/g, '&')
-		.replace(/\s+/g, ' ')
-		.trim();
-}
-
-/** NJT appends markers such as "-SEC" (via Secaucus) or a ✈ for the airport. */
-function cleanDestination(s: string): string {
-	return decodeEntities(s)
-		.replace(/\s*-\s*SEC$/i, '')
-		.replace(/\s*✈\s*$/u, '')
 		.trim();
 }
 
@@ -104,21 +99,21 @@ const isNjTransit = (item: NjtItem) => {
 	return !/amtrak|amtk|^\s*AM\s*$/i.test(line);
 };
 
-export function normalize(info: NjtStationInfo): BoardSnapshot {
+export function normalize(info: NjtStationInfo, fetchedAt = Date.now()): BoardSnapshot {
 	const departures: Departure[] = [];
 	for (const item of info.ITEMS ?? []) {
 		if (!item?.TRAIN_ID || !item.SCHED_DEP_DATE || !isNjTransit(item)) continue;
 
 		const departsAtMs = parseNjtDate(item.SCHED_DEP_DATE);
-		const known = LINES[(item.LINECODE ?? '').trim().toUpperCase()];
+		const fallbackColor = FALLBACK_COLORS[(item.LINECODE ?? '').trim().toUpperCase()];
 		const trainNumber = item.TRAIN_ID.trim();
 
 		const base: Omit<Departure, 'track'> = {
 			id: `${trainNumber}-${serviceDate(departsAtMs)}`,
 			trainNumber,
-			line: known?.name ?? decodeEntities(item.LINE ?? ''),
-			lineColor: isHex(item.BACKCOLOR) ? item.BACKCOLOR.trim() : (known?.color ?? '#8C9097'),
-			destination: cleanDestination(item.DESTINATION ?? ''),
+			line: decodeEntities(item.LINE ?? ''),
+			lineColor: isHex(item.BACKCOLOR) ? item.BACKCOLOR.trim() : (fallbackColor ?? '#8C9097'),
+			destination: decodeEntities(item.DESTINATION ?? ''),
 			departsAt: new Date(departsAtMs).toISOString(),
 			...status(item)
 		};
@@ -136,5 +131,5 @@ export function normalize(info: NjtStationInfo): BoardSnapshot {
 	}
 
 	departures.sort((a, b) => Date.parse(a.departsAt) - Date.parse(b.departsAt));
-	return { station: 'NY', departures };
+	return { station: 'NY', fetchedAt: new Date(fetchedAt).toISOString(), departures };
 }

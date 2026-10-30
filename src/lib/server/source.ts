@@ -49,7 +49,9 @@ function mockSource(): BoardSource {
 async function createSource(): Promise<BoardSource> {
 	if (DATA_SOURCE === 'njt') {
 		const { njtSource } = await import('./njt.js');
-		return cached(njtSource(), 30_000);
+		// 20 s here + 15 s at the CDN + a 15 s poll keeps the oldest board on screen
+		// under NJT's 1-minute "may not be real time" line in normal operation.
+		return cached(njtSource(), 20_000);
 	}
 	return cached(mockSource(), 15_000);
 }

@@ -21,8 +21,21 @@ describe('parseNjtDate', () => {
 // Hand-written to the documented response shape. Replace or add real captures
 // (npm run njt:capture) alongside it; every fixture runs through the shape checks below.
 describe('normalize (synthetic fixture)', () => {
-	const { departures } = normalize(load('njt-ny-synthetic.json'));
+	const fetchedAt = Date.parse('2026-10-29T23:40:00Z');
+	const snapshot = normalize(load('njt-ny-synthetic.json'), fetchedAt);
+	const { departures } = snapshot;
 	const byTrain = Object.fromEntries(departures.map((d) => [d.trainNumber, d]));
+
+	it('stamps the fetch time', () => {
+		expect(snapshot.fetchedAt).toBe('2026-10-29T23:40:00.000Z');
+	});
+
+	it("passes NJT's text through unmodified apart from decoding entities", () => {
+		expect(byTrain['3843'].destination).toBe('Trenton ✈');
+		expect(byTrain['3843'].line).toBe('Northeast Corrdr');
+		expect(byTrain['3277'].destination).toBe('Long Branch -SEC');
+		expect(byTrain['3277'].line).toBe('No Jersey Coast');
+	});
 
 	it('drops Amtrak and keeps NJ Transit trains in time order', () => {
 		expect(departures.map((d) => d.trainNumber)).toEqual(['3843', '3277', '6655', '6231']);
@@ -31,15 +44,12 @@ describe('normalize (synthetic fixture)', () => {
 	it('maps a present track to posted', () => {
 		expect(byTrain['3843'].track).toEqual({ kind: 'posted', track: '7' });
 		expect(byTrain['3843'].status).toBe('boarding');
-		expect(byTrain['3843'].destination).toBe('Trenton');
-		expect(byTrain['3843'].line).toBe('Northeast Corridor');
 		expect(byTrain['3843'].id).toBe('3843-20261029');
 	});
 
 	it('predicts when the track is missing or blank', () => {
 		expect(byTrain['3277'].track.kind).toBe('predicted');
 		expect(byTrain['6231'].track.kind).toBe('predicted');
-		expect(byTrain['3277'].destination).toBe('Long Branch');
 	});
 
 	it('maps lateness and cancellations', () => {
