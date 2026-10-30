@@ -7,7 +7,7 @@ export const GET: RequestHandler = async () => {
 		return Response.json(snapshot, {
 			headers: {
 				// Let Vercel's CDN share one response across all pollers and server instances.
-				'cache-control': 'public, max-age=0, s-maxage=15, stale-while-revalidate=15'
+				'cache-control': 'public, max-age=0, s-maxage=10, stale-while-revalidate=5'
 			}
 		});
 	} catch (err) {

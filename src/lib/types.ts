@@ -18,4 +18,5 @@ export type Departure = {
 export type BoardSnapshot = {
 	station: 'NY';
 	departures: Departure[];
+	fetchedAt: string; // ISO timestamp of the upstream fetch; NJT terms require a notice past 1 min
 };

@@ -52,12 +52,31 @@ npm run lint
   it and only calls `getToken` again on `Invalid token.`. Serverless cold starts would
   each spend a token, so on Vercel set `NJT_TOKEN` to a token you already have
   (`npm run njt:capture` prints when it issues one).
-- **Schedule calls:** the server fetches `getTrainSchedule` at most once per 30 s per
-  instance (about 2,880 calls a day if one instance stays warm). `/api/board` is also
-  CDN-cached, so pollers don't add upstream calls. NJT's daily quota for
-  `getTrainSchedule` wasn't verifiable without an account; check it in the developer
-  portal and record it here. (Some other RailData methods, such as `getStationSchedule`,
-  are limited to 5–10 calls a day.)
+- **Requests: 100,000 per day across all NJT feeds** (data agreement; exceeding it needs
+  NJT's written consent and prompt notice to passcomm@njtransit.com). The server fetches
+  `getTrainSchedule` at most once per 20 s per instance, about 4,320 calls a day per warm
+  instance. `/api/board` is CDN-cached, so pollers don't add upstream calls. The caches
+  are per instance, though, so watch the count if Vercel scales out widely. (Some
+  RailData methods, such as `getStationSchedule`, have their own 5–10 calls a day limit.)
+
+### Data agreement obligations
+
+What the NJT data access agreement requires, and where the app handles it:
+
+- **Serve from our server, never NJT's.** Browsers only call `/api/board` and
+  `/api/board/stream`; only `src/lib/server/` talks to `raildata.njtransit.com`.
+- **Say when data may not be real time** (latency over 1 minute). Each snapshot carries
+  `fetchedAt`, and the board shows "Information may not be real time" when it's older
+  than 60 s. In normal operation the oldest board is about 50 s old (20 s server cache +
+  15 s CDN + 15 s poll).
+- **Don't modify the data.** `normalize()` passes `DESTINATION`, `LINE`, `BACKCOLOR`,
+  `TRACK` and train numbers through as sent, only decoding HTML entities. Values are
+  added only where NJT gives none: predicted tracks (shown as "likely", never as posted)
+  and a fallback line color. Using a subset (dropping Amtrak, not showing most fields) is
+  allowed.
+- **Don't imply an NJT license or accuracy.** The footer says the site isn't affiliated
+  with NJ Transit, that the data is redistributed from this site's server and may be
+  inaccurate, incomplete or delayed, and that "likely" tracks are our estimates.
 
 ### Unverified until there is an account
 
