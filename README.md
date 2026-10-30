@@ -26,6 +26,11 @@ npm run check   # svelte-check / TypeScript
 npm run lint
 ```
 
+**Testing:** `npm test` runs the Vitest unit tests; `npm run test:e2e` runs the Playwright
+suite in `e2e/` against the mock dev server, in Chromium at phone (390×844) and desktop
+(1280×800) sizes (first time: `npx playwright install chromium`). CI
+(`.github/workflows/ci.yml`) runs lint, check, unit tests, build and e2e on every push and PR.
+
 ## How it fits together
 
 | Path                                     | What                                                           |
