@@ -1,0 +1,72 @@
+{
+	"STATION_2CHAR": "NY",
+	"STATIONNAME": "New York",
+	"STATIONMSGS": [],
+	"ITEMS": [
+		{
+			"SCHED_DEP_DATE": "29-Oct-2026 07:42:00 PM",
+			"DESTINATION": "Trenton &#9992",
+			"TRACK": "7",
+			"LINE": "Northeast Corrdr",
+			"TRAIN_ID": "3843",
+			"CONNECTING_TRAIN_ID": "",
+			"STATUS": "All Aboard",
+			"SEC_LATE": "0",
+			"LAST_MODIFIED": "29-Oct-2026 07:30:12 PM",
+			"BACKCOLOR": "#EF3E33",
+			"FORECOLOR": "#FFFFFF",
+			"SHADOWCOLOR": "#000000",
+			"LINECODE": "NE",
+			"LINEABBREVIATION": "NEC",
+			"INLINEMSG": ""
+		},
+		{
+			"SCHED_DEP_DATE": "29-Oct-2026 07:51:00 PM",
+			"DESTINATION": "Long Branch -SEC",
+			"TRACK": "",
+			"LINE": "No Jersey Coast",
+			"TRAIN_ID": "3277",
+			"STATUS": "in 9 Min",
+			"SEC_LATE": "480",
+			"BACKCOLOR": "#00A4E4 ",
+			"LINECODE": "NC",
+			"LINEABBREVIATION": "NJCL"
+		},
+		{
+			"SCHED_DEP_DATE": "29-Oct-2026 08:04:00 PM",
+			"DESTINATION": "Dover",
+			"TRACK": " ",
+			"LINE": "Morristown Line",
+			"TRAIN_ID": "6655",
+			"STATUS": "Cancelled",
+			"SEC_LATE": "0",
+			"BACKCOLOR": "#00A94F",
+			"LINECODE": "ME",
+			"LINEABBREVIATION": "M&amp;E"
+		},
+		{
+			"SCHED_DEP_DATE": "29-Oct-2026 08:10:00 PM",
+			"DESTINATION": "Washington",
+			"TRACK": "",
+			"LINE": "Amtrak",
+			"TRAIN_ID": "A177",
+			"STATUS": "",
+			"SEC_LATE": "0",
+			"BACKCOLOR": "#FFFF00",
+			"LINECODE": "AM",
+			"LINEABBREVIATION": "AMTK"
+		},
+		{
+			"SCHED_DEP_DATE": "29-Oct-2026 08:19:00 PM",
+			"DESTINATION": "Montclair State U",
+			"TRACK": "",
+			"LINE": "Montclair-Boonton",
+			"TRAIN_ID": "6231",
+			"STATUS": "",
+			"SEC_LATE": "",
+			"BACKCOLOR": "",
+			"LINECODE": "MC",
+			"LINEABBREVIATION": "MOBO"
+		}
+	]
+}

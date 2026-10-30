@@ -14,5 +14,9 @@ export const variables = defineEnvVars({
 		}
 	},
 	NJT_USERNAME: { description: 'NJ Transit rail API username', schema: optional },
-	NJT_PASSWORD: { description: 'NJ Transit rail API password', schema: optional }
+	NJT_PASSWORD: { description: 'NJ Transit rail API password', schema: optional },
+	NJT_TOKEN: {
+		description: 'Optional pre-issued RailData token, so cold starts skip getToken (5/day limit)',
+		schema: optional
+	}
 });
