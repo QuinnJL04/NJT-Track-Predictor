@@ -14,9 +14,11 @@
 		"format": "prettier --write .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"njt:capture": "node --env-file=.env scripts/capture-njt-fixture.mjs"
+		"njt:capture": "node --env-file=.env scripts/capture-njt-fixture.mjs",
+		"logger:export": "node --env-file-if-exists=.env scripts/export-observations.mjs"
 	},
 	"devDependencies": {
+		"@electric-sql/pglite": "^0.5.13",
 		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-vercel": "^7.0.0",
 		"@sveltejs/kit": "^3.0.0",
@@ -38,5 +40,8 @@
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
+	},
+	"dependencies": {
+		"@neondatabase/serverless": "^1.2.0"
 	}
 }

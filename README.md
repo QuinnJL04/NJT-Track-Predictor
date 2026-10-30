@@ -21,7 +21,7 @@ tracks post about 12 minutes before departure, and some post to a track other th
 top prediction.
 
 ```bash
-npm test        # unit tests (mock board, stub, NJT normalize)
+npm test        # unit tests (mock board, stub, NJT normalize, training log)
 npm run check   # svelte-check / TypeScript
 npm run lint
 ```
@@ -37,6 +37,58 @@ npm run lint
 | `src/routes/api/board/+server.ts`        | JSON snapshot (CDN-cached 15 s)                                |
 | `src/routes/api/board/stream/+server.ts` | SSE: pushes a snapshot when it changes, closes itself at 55 s  |
 | `src/lib/data/board.ts`                  | Client store: SSE with backoff → polling fallback, tab-pausing |
+| `src/lib/server/observations.ts`         | Board snapshot → training rows, one upsert per snapshot        |
+| `src/routes/api/cron/log/+server.ts`     | Cron target: logs the current board (needs `CRON_SECRET`)      |
+
+## Training data
+
+The track model needs history: which train got which track. `/api/cron/log` reads the
+board through the same cache as `/api/board` and upserts it into Postgres, one row per
+train per service day (`migrations/001_track_observations.sql`). It records the board
+fields as received, the first and latest time the train was seen, the stub's prediction
+at first sight (to compare against the model later), the first posted track and when it
+posted, the latest posted track, and the latest status and delay. Repeat polls update
+the row; an older or repeated snapshot changes nothing.
+
+Logging is off until `DATABASE_URL` is set; the route then answers `{ logged: 0 }`.
+
+### Setup
+
+1. **Database.** In the Vercel project, add Neon from the Marketplace (Storage → Neon).
+   It sets `DATABASE_URL`. (Vercel Postgres no longer exists; it moved to Neon.) Then
+   create the table, with the Neon SQL editor or:
+   ```bash
+   psql "$DATABASE_URL" -f migrations/001_track_observations.sql
+   ```
+2. **Secret.** Set `CRON_SECRET` in Vercel to a random string (`openssl rand -hex 32`).
+   Requests without `Authorization: Bearer $CRON_SECRET` get a 401, and so does every
+   request while it's unset.
+3. **Trigger.** Vercel Cron on Hobby runs at most once a day (±59 min), so `vercel.json`
+   has only a daily heartbeat. Pick one:
+   - **GitHub Actions** (`.github/workflows/training-logger.yml`): set repo variable
+     `LOGGER_URL` to `https://<your-app>/api/cron/log` and secret `CRON_SECRET`.
+     GitHub schedules run at most every 5 minutes and can be late, so each run calls the
+     route 5 times, a minute apart.
+   - **An external cron** such as cron-job.org, calling the URL every minute with the
+     `Authorization` header. More punctual than GitHub.
+   - **Vercel Pro**: change the schedule in `vercel.json` to `* * * * *`; Vercel sends the
+     bearer token itself.
+
+At one call a minute that's about 1,440 logger requests a day, each costing at most one
+`getTrainSchedule` call (fewer when the 20 s cache is already warm from users), far under
+NJT's 100,000 a day. Tracks post roughly 10–15 minutes before departure, so a 1-minute
+cadence catches each posting within a minute.
+
+### Export
+
+```bash
+npm run logger:export              # → data/track_observations.csv (gitignored)
+npm run logger:export -- out.csv
+```
+
+Timestamps are UTC ISO 8601; `first_prediction` is JSON (`[{"track":"3","p":0.6}, ...]`).
+`last_status` is the app's normalized status (`on_time`, `delayed`, `boarding`,
+`cancelled`), not NJT's raw `STATUS` text.
 
 ## Real NJT data
 

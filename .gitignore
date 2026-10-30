@@ -11,6 +11,9 @@ node_modules
 # Playwright screenshots and snapshots
 .playwright-mcp
 
+# Training data exports (npm run logger:export)
+/data
+
 # OS
 .DS_Store
 Thumbs.db
