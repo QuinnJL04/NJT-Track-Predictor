@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clockTime, predictedLabel } from './format.js';
+import { clockTime, predictedLabel } from './format';
 
 describe('predictedLabel', () => {
 	it('shows the top track when confident', () => {

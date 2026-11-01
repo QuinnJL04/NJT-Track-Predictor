@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { predictTrack } from './stub.js';
+import { predictTrack } from './stub';
 
 const base = {
 	id: 'x',

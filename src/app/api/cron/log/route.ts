@@ -1,9 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
-import { CRON_SECRET } from '$app/env/private';
-import { getDb } from '#lib/server/db.js';
-import { logSnapshot } from '#lib/server/observations.js';
-import { getBoard } from '#lib/server/source.js';
-import type { RequestHandler } from './$types';
+import { connection } from 'next/server';
+import { CRON_SECRET } from '@/lib/server/env';
+import { getDb } from '@/lib/server/db';
+import { logSnapshot } from '@/lib/server/observations';
+import { getBoard } from '@/lib/server/source';
 
 // Records the current board for training data. Called by Vercel Cron or an external
 // scheduler with `Authorization: Bearer $CRON_SECRET`. Goes through the shared board
@@ -16,7 +16,8 @@ function authorized(header: string | null): boolean {
 	return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-export const GET: RequestHandler = async ({ request }) => {
+export async function GET(request: Request) {
+	await connection();
 	if (!authorized(request.headers.get('authorization'))) {
 		return Response.json({ error: 'Unauthorized' }, { status: 401 });
 	}
@@ -35,4 +36,4 @@ export const GET: RequestHandler = async ({ request }) => {
 		console.error('training log failed', err);
 		return Response.json({ error: 'Logging failed' }, { status: 500 });
 	}
-};
+}

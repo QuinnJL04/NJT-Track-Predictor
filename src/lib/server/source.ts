@@ -4,11 +4,11 @@ import {
 	KV_REST_API_URL,
 	UPSTASH_REDIS_REST_TOKEN,
 	UPSTASH_REDIS_REST_URL
-} from '$app/env/private';
-import type { BoardSnapshot } from '#lib/types.js';
-import { MockBoard } from '#lib/data/mock.js';
-import { memoryStore, upstashStore, type KvStore } from './kv.js';
-import { sharedCached } from './shared.js';
+} from '@/lib/server/env';
+import type { BoardSnapshot } from '@/lib/types';
+import { MockBoard } from '@/lib/data/mock';
+import { memoryStore, upstashStore, type KvStore } from './kv';
+import { sharedCached } from './shared';
 
 export interface BoardSource {
 	getBoard(): Promise<BoardSnapshot>;
@@ -65,7 +65,7 @@ function createStore(): KvStore {
 
 async function createSource(): Promise<BoardSource> {
 	if (DATA_SOURCE === 'njt') {
-		const { njtSource } = await import('./njt.js');
+		const { njtSource } = await import('./njt');
 		const store = createStore();
 		// 20 s here + 15 s at the CDN + a 15 s poll keeps the oldest board on screen
 		// under NJT's 1-minute "may not be real time" line in normal operation.

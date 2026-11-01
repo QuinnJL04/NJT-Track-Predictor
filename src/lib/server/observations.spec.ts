@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { BoardSnapshot, Departure, TrackInfo } from '#lib/types.js';
-import { logSnapshot, toRow, upsertQuery, type Db } from './observations.js';
+import type { BoardSnapshot, Departure, TrackInfo } from '@/lib/types';
+import { logSnapshot, toRow, upsertQuery, type Db } from './observations';
 
 const MIGRATION = readFileSync(
 	join(import.meta.dirname, '../../../migrations/001_track_observations.sql'),

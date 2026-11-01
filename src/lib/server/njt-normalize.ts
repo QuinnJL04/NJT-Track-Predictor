@@ -1,5 +1,5 @@
-import type { BoardSnapshot, Departure } from '#lib/types.js';
-import { predictTrack } from '#lib/predict/stub.js';
+import type { BoardSnapshot, Departure } from '@/lib/types';
+import { predictTrack } from '@/lib/predict/stub';
 
 // Pure mapping from the RailData getTrainSchedule response to our contract.
 // Kept apart from njt.ts so it can be tested without env vars or network.

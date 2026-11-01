@@ -1,4 +1,4 @@
-import type { Departure, TrackInfo } from '#lib/types.js';
+import type { Departure, TrackInfo } from '@/lib/types';
 
 const timeParts = new Intl.DateTimeFormat('en-US', {
 	timeZone: 'America/New_York',

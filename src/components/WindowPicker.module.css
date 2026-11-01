@@ -1,0 +1,31 @@
+.seg {
+	display: inline-flex;
+	padding: 3px;
+	border-radius: 0.75rem;
+	background: var(--rule);
+}
+
+.option {
+	min-width: 3.75rem;
+	min-height: 2.5rem;
+	padding: 0 0.75rem;
+	border: 0;
+	border-radius: 0.5625rem;
+	background: transparent;
+	color: var(--muted);
+	font-size: 0.9375rem;
+	font-weight: 650;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.option[aria-checked='true'] {
+	background: var(--surface);
+	color: var(--ink);
+	box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+.option:focus-visible {
+	outline: 2px solid var(--ink);
+	outline-offset: 1px;
+}

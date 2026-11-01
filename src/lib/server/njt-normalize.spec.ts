@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { normalize, parseNjtDate, type NjtStationInfo } from './njt-normalize.js';
+import { normalize, parseNjtDate, type NjtStationInfo } from './njt-normalize';
 
 const FIXTURES = join(import.meta.dirname, '../../../tests/fixtures');
 const load = (name: string) =>

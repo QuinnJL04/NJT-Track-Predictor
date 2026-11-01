@@ -1,4 +1,4 @@
-import type { Departure, TrackInfo } from '#lib/types.js';
+import type { Departure, TrackInfo } from '@/lib/types';
 
 // Placeholder until the real model exists. Deterministic per train number,
 // biased toward tracks 1–4. Keep the signature stable: the model drops in here.

@@ -3,8 +3,8 @@
 NJ Transit departures from New York Penn Station, with the track: posted when NJT has
 announced it, predicted when it hasn't. One screen, built for a phone.
 
-SvelteKit 3 + TypeScript, deployed to Vercel. The predictor is a deterministic stub
-(`src/lib/predict/stub.ts`) until the real model exists.
+Next.js 16 (App Router) + React + TypeScript, deployed to Vercel. The predictor is a
+deterministic stub (`src/lib/predict/stub.ts`) until the real model exists.
 
 ## Develop
 
@@ -22,7 +22,7 @@ top prediction.
 
 ```bash
 npm test        # unit tests (mock board, stub, NJT normalize, training log)
-npm run check   # svelte-check / TypeScript
+npm run check   # TypeScript (generates Next's route types first)
 npm run lint
 ```
 
@@ -33,19 +33,28 @@ suite in `e2e/` against the mock dev server, in Chromium at phone (390×844) and
 
 ## How it fits together
 
-| Path                                     | What                                                           |
-| ---------------------------------------- | -------------------------------------------------------------- |
-| `src/lib/types.ts`                       | The data contract: `Departure`, `TrackInfo`, `BoardSnapshot`   |
-| `src/lib/server/source.ts`               | Picks mock or NJT by `DATA_SOURCE`, shares one cached fetch    |
-| `src/lib/server/shared.ts`               | Cross-instance board cache, token lock, daily call budget      |
-| `src/lib/server/kv.ts`                   | Key-value store: Upstash Redis, or in-memory when unconfigured |
-| `src/lib/server/njt.ts`                  | RailData client: token reuse and refresh, `getTrainSchedule`   |
-| `src/lib/server/njt-normalize.ts`        | NJT response → `Departure[]`                                   |
-| `src/routes/api/board/+server.ts`        | JSON snapshot (CDN-cached 15 s)                                |
-| `src/routes/api/board/stream/+server.ts` | SSE: pushes a snapshot when it changes, closes itself at 55 s  |
-| `src/lib/data/board.ts`                  | Client store: SSE with backoff → polling fallback, tab-pausing |
-| `src/lib/server/observations.ts`         | Board snapshot → training rows, one upsert per snapshot        |
-| `src/routes/api/cron/log/+server.ts`     | Cron target: logs the current board (needs `CRON_SECRET`)      |
+| Path                                | What                                                                |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `src/lib/types.ts`                  | The data contract: `Departure`, `TrackInfo`, `BoardSnapshot`        |
+| `src/app/page.tsx`                  | Server Component: static shell, then streams in the first board     |
+| `src/components/Board.tsx`          | Client Component: the interactive screen (window, banners, pulses)  |
+| `src/components/TrackBadge.tsx`     | Posted (solid) vs predicted (dashed "likely") track badge           |
+| `src/lib/data/board.ts`             | Browser live updates: SSE with backoff → polling, tab-pausing       |
+| `src/lib/data/useBoard.ts`          | React hook wrapping `board.ts`                                      |
+| `src/lib/server/env.ts`             | Every server env var, read once; `server-only` keeps it off clients |
+| `src/lib/server/source.ts`          | Picks mock or NJT by `DATA_SOURCE`, shares one cached fetch         |
+| `src/lib/server/shared.ts`          | Cross-instance board cache, token lock, daily call budget           |
+| `src/lib/server/kv.ts`              | Key-value store: Upstash Redis, or in-memory when unconfigured      |
+| `src/lib/server/njt.ts`             | RailData client: token reuse and refresh, `getTrainSchedule`        |
+| `src/lib/server/njt-normalize.ts`   | NJT response → `Departure[]`                                        |
+| `src/app/api/board/route.ts`        | JSON snapshot (CDN-cached 15 s)                                     |
+| `src/app/api/board/stream/route.ts` | SSE: pushes a snapshot when it changes, closes itself at 55 s       |
+| `src/lib/server/observations.ts`    | Board snapshot → training rows, one upsert per snapshot             |
+| `src/app/api/cron/log/route.ts`     | Cron target: logs the current board (needs `CRON_SECRET`)           |
+
+Components are styled with CSS Modules (`*.module.css` next to each component; class
+names are scoped to that file). Colors are CSS variables in `src/app/globals.css`, redefined
+for dark mode. Imports use the `@/` alias for `src/`.
 
 ## Training data
 
