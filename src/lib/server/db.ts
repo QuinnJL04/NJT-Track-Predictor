@@ -1,6 +1,6 @@
-import { DATABASE_URL } from '$app/env/private';
+import { DATABASE_URL } from '@/lib/server/env';
 import { neon } from '@neondatabase/serverless';
-import type { Db } from './observations.js';
+import type { Db } from './observations';
 
 let db: Db | undefined;
 

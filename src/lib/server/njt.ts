@@ -1,8 +1,8 @@
-import { NJT_PASSWORD, NJT_TOKEN, NJT_USERNAME } from '$app/env/private';
-import type { BoardSource } from './source.js';
-import type { KvStore } from './kv.js';
-import { dailyBudget, sharedToken } from './shared.js';
-import { normalize, type NjtStationInfo } from './njt-normalize.js';
+import { NJT_PASSWORD, NJT_TOKEN, NJT_USERNAME } from '@/lib/server/env';
+import type { BoardSource } from './source';
+import type { KvStore } from './kv';
+import { dailyBudget, sharedToken } from './shared';
+import { normalize, type NjtStationInfo } from './njt-normalize';
 
 // NJ Transit RailData API. Every call is a multipart/form-data POST.
 // NJT allows only 5 new tokens per day per account, so the token lives in the shared

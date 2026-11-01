@@ -1,0 +1,8 @@
+.footer {
+	max-width: var(--col);
+	margin: 0 auto;
+	padding: 0 var(--gutter) max(1.5rem, env(safe-area-inset-bottom));
+	color: var(--muted);
+	font-size: 0.75rem;
+	line-height: 1.45;
+}

@@ -1,12 +1,12 @@
 node_modules
 
 # Output
-.output
-.vercel
-.netlify
-.wrangler
-/.svelte-kit
+/.next
+/out
 /build
+.vercel
+next-env.d.ts
+*.tsbuildinfo
 /test-results
 /playwright-report
 
@@ -25,7 +25,3 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.test
-
-# Vite
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*

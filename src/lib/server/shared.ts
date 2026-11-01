@@ -1,6 +1,6 @@
-import type { BoardSnapshot } from '#lib/types.js';
-import type { KvStore } from './kv.js';
-import type { BoardSource } from './source.js';
+import type { BoardSnapshot } from '@/lib/types';
+import type { KvStore } from './kv';
+import type { BoardSource } from './source';
 
 // Coordination between serverless instances through a KvStore, so that cold starts and
 // scale-out don't multiply NJT calls or spend the 5-a-day token quota.

@@ -1,15 +1,16 @@
-import type { Config } from '@sveltejs/adapter-vercel';
-import { getBoard } from '#lib/server/source.js';
-import type { RequestHandler } from './$types';
+import { connection } from 'next/server';
+import { getBoard } from '@/lib/server/source';
 
-export const config: Config = { maxDuration: 60 };
+// Seconds Vercel lets this function run. The stream ends itself a little before that.
+export const maxDuration = 60;
 
 const CHECK_MS = 5_000; // the source cache decides how often upstream is actually hit
 const HEARTBEAT_MS = 20_000;
 // End the stream ourselves before Vercel's limit; EventSource reconnects on its own.
 const LIFETIME_MS = 55_000;
 
-export const GET: RequestHandler = ({ request }) => {
+export async function GET(request: Request) {
+	await connection();
 	const encoder = new TextEncoder();
 	let cleanup = () => {};
 
@@ -72,4 +73,4 @@ export const GET: RequestHandler = ({ request }) => {
 			'x-accel-buffering': 'no'
 		}
 	});
-};
+}

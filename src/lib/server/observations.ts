@@ -1,4 +1,4 @@
-import type { BoardSnapshot, Departure } from '#lib/types.js';
+import type { BoardSnapshot, Departure } from '@/lib/types';
 
 // Turns board snapshots into training rows (migrations/001_track_observations.sql).
 // Pure apart from the injected Db, so it can be tested against an in-memory Postgres.

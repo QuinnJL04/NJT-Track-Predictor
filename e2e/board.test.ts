@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const rows = (page: Page) => page.getByRole('list', { name: 'Departures' }).getByRole('listitem');
+const banner = (page: Page) => page.getByRole('status').filter({ hasText: 'Connection lost' });
 
 /**
  * Load the board and wait for the client to take over. The board store only opens its
@@ -54,8 +55,8 @@ test('posted and predicted tracks look different', async ({ page }) => {
 	// The 2 hr window always holds both: tracks post about 12 minutes out.
 	await page.getByRole('radio', { name: '2 hr' }).click();
 
-	const posted = page.locator('.badge.posted');
-	const predicted = page.locator('.badge.predicted');
+	const posted = page.locator('[data-track="posted"]');
+	const predicted = page.locator('[data-track="predicted"]');
 	await expect(posted.first()).toBeVisible();
 	await expect(predicted.first()).toBeVisible();
 
@@ -75,18 +76,16 @@ test('falls back to polling when the stream is blocked', async ({ page }) => {
 	await page.goto('/');
 	const res = await (await polled).response();
 	expect(res?.ok()).toBe(true);
-	await expect(page.locator('.banner')).toBeHidden();
+	await expect(banner(page)).toBeHidden();
 });
 
 test('shows a dismissible banner when the board is unreachable', async ({ page }) => {
 	await page.route('**/api/board**', (route) => route.abort());
 	await page.goto('/');
 
-	const banner = page.locator('.banner');
-	await expect(banner).toBeVisible({ timeout: 10_000 });
-	await expect(banner).toContainText('Connection lost');
-	await banner.getByRole('button', { name: 'Dismiss' }).click();
-	await expect(banner).toBeHidden();
+	await expect(banner(page)).toBeVisible({ timeout: 10_000 });
+	await banner(page).getByRole('button', { name: 'Dismiss' }).click();
+	await expect(banner(page)).toBeHidden();
 });
 
 test('says when the data may not be real time', async ({ page }) => {
@@ -94,7 +93,7 @@ test('says when the data may not be real time', async ({ page }) => {
 	// Only the server-rendered snapshot ever arrives, so it can only get older.
 	await page.route('**/api/board**', (route) => route.abort());
 	await openBoard(page);
-	const stale = page.locator('.stale');
+	const stale = page.getByRole('status').filter({ hasText: 'may not be real time' });
 	await expect(rows(page).first()).toBeVisible();
 	await expect(stale).toBeHidden();
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MockBoard, POST_LEAD_MS } from './mock.js';
+import { MockBoard, POST_LEAD_MS } from './mock';
 
 const START = Date.parse('2026-10-29T21:00:00Z');
 const MIN = 60_000;

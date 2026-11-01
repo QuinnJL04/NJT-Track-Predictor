@@ -1,13 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BoardSnapshot } from '#lib/types.js';
-import { memoryStore, type KvStore } from './kv.js';
-import {
-	BudgetExhaustedError,
-	dailyBudget,
-	newYorkDay,
-	sharedCached,
-	sharedToken
-} from './shared.js';
+import type { BoardSnapshot } from '@/lib/types';
+import { memoryStore, type KvStore } from './kv';
+import { BudgetExhaustedError, dailyBudget, newYorkDay, sharedCached, sharedToken } from './shared';
 
 // Each "instance" is its own sharedCached/sharedToken wrapper (own local memory) over one
 // shared in-memory store, which stands in for Redis.

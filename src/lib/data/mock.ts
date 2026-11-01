@@ -1,5 +1,5 @@
-import type { BoardSnapshot, Departure } from '#lib/types.js';
-import { mulberry32, predictTrack } from '#lib/predict/stub.js';
+import type { BoardSnapshot, Departure } from '@/lib/types';
+import { mulberry32, predictTrack } from '@/lib/predict/stub';
 
 const MIN = 60_000;
 const HORIZON_MS = 3 * 60 * MIN;
