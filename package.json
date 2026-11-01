@@ -15,9 +15,11 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"test:e2e": "playwright test",
-		"njt:capture": "node --env-file=.env scripts/capture-njt-fixture.mjs"
+		"njt:capture": "node --env-file=.env scripts/capture-njt-fixture.mjs",
+		"logger:export": "node --env-file-if-exists=.env scripts/export-observations.mjs"
 	},
 	"devDependencies": {
+		"@electric-sql/pglite": "^0.5.13",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.64.1",
 		"@sveltejs/adapter-vercel": "^7.0.0",
@@ -42,6 +44,7 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
+		"@neondatabase/serverless": "^1.2.0",
 		"@upstash/redis": "^1.40.0"
 	}
 }

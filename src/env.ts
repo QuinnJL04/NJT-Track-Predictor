@@ -30,5 +30,13 @@ export const variables = defineEnvVars({
 	KV_REST_API_TOKEN: {
 		description: 'Upstash Redis REST token, as named by the Vercel integration',
 		schema: optional
+	},
+	DATABASE_URL: {
+		description: 'Postgres (Neon) connection string for training data; logging is off when unset',
+		schema: optional
+	},
+	CRON_SECRET: {
+		description: 'Bearer token required by /api/cron/log (Vercel Cron sends it automatically)',
+		schema: optional
 	}
 });

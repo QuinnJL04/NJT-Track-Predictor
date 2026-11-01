@@ -1,0 +1,34 @@
+# Polls /api/cron/log about once a minute, because Vercel Cron on Hobby runs at most daily.
+# GitHub runs schedules at most every 5 minutes (and best effort), so each run calls the
+# route 5 times, 60 s apart. That is ~1,440 calls a day; each costs at most one NJT call.
+# Setup: repo variable LOGGER_URL (https://<app>/api/cron/log) and secret CRON_SECRET.
+name: Training data logger
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: training-logger
+  cancel-in-progress: false
+
+jobs:
+  log:
+    if: vars.LOGGER_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Call the logger
+        env:
+          LOGGER_URL: ${{ vars.LOGGER_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          failed=0
+          for i in 1 2 3 4 5; do
+            curl --fail-with-body -sS --max-time 30 \
+              -H "Authorization: Bearer $CRON_SECRET" "$LOGGER_URL" || failed=$((failed + 1))
+            echo
+            [ "$i" -lt 5 ] && sleep 60
+          done
+          [ "$failed" -lt 5 ]
